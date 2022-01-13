@@ -19,20 +19,8 @@ func LibexecPath() (string, error) {
 		return "", fmt.Errorf("unable to compute executable path: %w", err)
 	}
 
-	// If the executable path is a symbolic link, then perform resolution.
-	// Unfortunately there's no way to do this in a completely race-free
-	// fashion, but we're dealing with system prefixes here so it shouldn't be a
-	// problem.
-	if metadata, err := os.Lstat(executablePath); err != nil {
-		return "", fmt.Errorf("unable to read executable metadata: %w", err)
-	} else if metadata.Mode()&os.ModeSymlink != 0 {
-		if target, err := os.Readlink(executablePath); err != nil {
-			return "", fmt.Errorf("unable to read executable symbolic link target: %w", err)
-		} else if resolved, err := filepath.Abs(filepath.Join(filepath.Dir(executablePath), target)); err != nil {
-			return "", fmt.Errorf("unable to resolve executable symbolic link target: %w", err)
-		} else {
-			executablePath = resolved
-		}
+	if executablePath, err = filepath.EvalSymlinks(executablePath); err != nil {
+		return "", fmt.Errorf("unable to resolve symlinks: %w", err)
 	}
 
 	// Check that the executable resides within a bin directory.
