@@ -15,6 +15,7 @@ import (
 func LibexecPath() (string, error) {
 	// Compute the path to the current executable.
 	executablePath, err := os.Executable()
+	println("e1=", executablePath)
 	if err != nil {
 		return "", fmt.Errorf("unable to compute executable path: %w", err)
 	}
@@ -22,11 +23,14 @@ func LibexecPath() (string, error) {
 	if executablePath, err = filepath.EvalSymlinks(executablePath); err != nil {
 		return "", fmt.Errorf("unable to resolve symlinks: %w", err)
 	}
+	println("e2=", executablePath)
 
 	// Check that the executable resides within a bin directory.
 	if filepath.Base(filepath.Dir(executablePath)) != "bin" {
 		return "", errors.New("executable does not reside within bin directory")
 	}
+
+	println("r=", filepath.Clean(filepath.Join(executablePath, "..", "..", "libexec")))
 
 	// Compute the expected libexec path.
 	return filepath.Clean(filepath.Join(executablePath, "..", "..", "libexec")), nil
